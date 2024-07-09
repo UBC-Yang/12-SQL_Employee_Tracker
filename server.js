@@ -67,7 +67,7 @@ function start() {
 
 // Function to View All Employees
 function viewAllEmployees() {
-    const query = "SELECT * FROM employees";
+    const query = "SELECT * FROM employee";
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
@@ -233,12 +233,12 @@ function addRole() {
             .prompt([
                 {
                     type: "input",
-                    name: "roleName",
+                    name: "title",
                     message: "What is the name of the role?",
                 },
                 {
                     type: "input",
-                    name: "roleSalary",
+                    name: "salary",
                     message: "What is the salary of the role?",
                 },
                 {
@@ -258,8 +258,8 @@ function addRole() {
                 connection.query(
                     query,
                     {
-                        roleName: answers.roleName,
-                        roleSalary: answers.roleSalary,
+                        title: answers.title,
+                        salary: answers.salary,
                         department_id: department,
                     },
                     (err, res) => {
@@ -290,7 +290,7 @@ function addDepartment() {
             message: "What is the name of the department?",
         })
         .then ((answer) => {
-            console.log(answer.newDepartment);
+            console.log(answer.name);
             const query = ` INSERT INTO departments (department_name) VALUES ("${answer.name}")`;
             connection.query(query, (err, res) => {
                 if (err) throw err;
