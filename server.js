@@ -1,17 +1,16 @@
 const inquirer = require("inquirer");
-const mysql = require("mysql");
-const db = require("./db")
+const { Client } = require("pg");
 
-// Create MySQL Connection
-const connection = mysql.createConnection({
-    host: "localhost",
-    port: 3001,
-    user: "root",
+// Create PostgreSQL Connection
+const client = new Client({
+    host: "127.0.0.1",
+    port: 5432,
+    user: "shuyang",
     password: "",
-    database: "employeeTracker_db"
+    database: "employeetracker_db"
 });
 
-connection.connect((err) => {
+client.connect((err) => {
     if (err) throw err;
     console.log("Connected to database");
     start();
@@ -68,7 +67,7 @@ function start() {
 // Function to View All Employees
 function viewAllEmployees() {
     const query = "SELECT * FROM employee";
-    connection.query(query, (err, res) => {
+    client.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
         start();
@@ -81,7 +80,7 @@ function viewAllEmployees() {
     // Who is the employee's manager? (Use arrow keys)
 function addEmployee() {
     // connect to database
-    connection.query("SELECT id, title FROM roles", (error, results) => {
+    client.query("SELECT id, title FROM roles", (error, results) => {
         if (error) {
             console.error(error);
             return;
@@ -91,7 +90,7 @@ function addEmployee() {
             value: id,
         }));
 
-        connection.query(
+        client.query(
             "SELECT id, CONCAT(first_name, last_name) AS name FROM employee",
             (error, results) => {
                 if (error) {
@@ -129,7 +128,7 @@ function addEmployee() {
                             message: "Who is the employee's manager? (Use arrow keys)",
                             choices: [
                                 {name: "None", value: null},
-                                managers,
+                                ...managers,
                             ],
                         },
                     ])
@@ -142,7 +141,7 @@ function addEmployee() {
                             answers.roleID,
                             answers.managerID,
                         ];
-                        connection.query(sql, values, (error) => {
+                        client.query(sql, values, (error) => {
                             if (error) {
                                 console.error(error);
                                 return;
@@ -166,9 +165,9 @@ function updateEmployeeRole() {
     const queryEmployees =
         "SELECT employee.id, employee.first_name, employee.last_name, roles.title FROM employee LEFT JOIN roles ON employee.role_id = roles.id";
     const queryRoles = "SELECT * FROM roles";
-    connection.query(queryEmployees, (err, resEmployees) => {
+    client.query(queryEmployees, (err, resEmployees) => {
         if (err) throw err;
-        connection.query(queryRoles, (err, resRoles) => {
+        client.query(queryRoles, (err, resRoles) => {
             if (err) throw err;
             inquirer
                 .prompt([
@@ -184,30 +183,24 @@ function updateEmployeeRole() {
                     {
                         type: "list",
                         name: "role",
-                        message: "// Which role do you want to assign the selected employee? (Use arrow keys)",
+                        message: "Which role do you want to assign the selected employee? (Use arrow keys)",
                         choices: resRoles.map((role) => role.title),
                     },
                 ])
                 .then((answers) => {
                     const employee = resEmployees.find(
                         (employee) =>
-                            `${employee.first_name} ${employee.last_name}` ===
-                            answers.employee
+                            `${employee.first_name} ${employee.last_name}` === answers.employee
                     );
                     const role = resRoles.find(
                         (role) => role.title === answers.role
                     );
-                    const query =
-                        "UPDATE employee SET role_id = ? WHERE id = ?";
-                    connection.query(
-                        query,
-                        [role.id, employee.id],
-                        (err, res) => {
-                            if (err) throw err;
-                            console.log("Updated employee's role");
-                            start();
-                        }
-                    );
+                    const query = "UPDATE employee SET role_id = ? WHERE id = ?";
+                    client.query(query, [role.id, employee.id], (err, res) => {
+                        if (err) throw err;
+                        console.log("Updated employee's role");
+                        start();
+                    });
                 });
         });
     });
@@ -215,7 +208,7 @@ function updateEmployeeRole() {
 // Function to View All Roles
 function viewAllRoles() {
     const query = "SELECT * FROM roles";
-    connection.query(query, (err, res) => {
+    client.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
         start();
@@ -227,7 +220,7 @@ function viewAllRoles() {
     // Which department does role belong to? (Use arrow keys)
 function addRole() {
     const query = "SELECT * FROM departments";
-    connection.query(query, (err, res) => {
+    client.query(query, (err, res) => {
         if (err) throw err;
         inquirer
             .prompt([
@@ -255,7 +248,7 @@ function addRole() {
                     (department) => department.name === answers.department
                 );
                 const query = "INSERT INTO roles SET ?";
-                connection.query(
+                client.query(
                     query,
                     {
                         title: answers.title,
@@ -274,7 +267,7 @@ function addRole() {
 // Function to View All Departments
 function viewAllDepartments() {
     const query = "SELECT * FROM departments";
-    connection.query(query, (err, res) => {
+    client.query(query, (err, res) => {
         if (err) throw err;
         console.table(res);
         start();
@@ -292,7 +285,7 @@ function addDepartment() {
         .then ((answer) => {
             console.log(answer.name);
             const query = ` INSERT INTO departments (department_name) VALUES ("${answer.name}")`;
-            connection.query(query, (err, res) => {
+            client.query(query, (err, res) => {
                 if (err) throw err;
                 console.log(`Added ${answer.name} department to the database`);
                 start();
