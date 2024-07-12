@@ -35,7 +35,7 @@ function start() {
             ],
         })
         .then ((answer) => {
-            switch (answer.action) {
+            switch (answer.actionChoices) {
                 case "View All Employees":
                     viewAllEmployees();
                     break;
@@ -69,7 +69,7 @@ function viewAllEmployees() {
     const query = "SELECT * FROM employee";
     client.query(query, (err, res) => {
         if (err) throw err;
-        console.table(res);
+        console.table(res.rows);
         start();
     });
 }
@@ -85,7 +85,7 @@ function addEmployee() {
             console.error(error);
             return;
         }
-        const roles = results.map(({id, title}) => ({
+        const roles = results.rows.map(({id, title}) => ({
             name: title,
             value: id,
         }));
@@ -98,7 +98,7 @@ function addEmployee() {
                     return;
                 }
                 
-                const managers = results.map(({id, name}) => ({
+                const managers = results.rows.map(({id, name}) => ({
                     name,
                     value: id,
                 }));
@@ -133,8 +133,9 @@ function addEmployee() {
                         },
                     ])
                     .then ((answers) => {
+                        console.log(answers)
                         const sql = 
-                            "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)";
+                            "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)";
                         const values = [
                             answers.firstName,
                             answers.lastName,
@@ -175,7 +176,7 @@ function updateEmployeeRole() {
                         type: "list",
                         name: "employee",
                         message: "Which employee's role do you want to update? (Use arrow keys)",
-                        choices: resEmployees.map(
+                        choices: resEmployees.rows.map(
                             (employee) =>
                                 `${employee.first_name} ${employee.last_name}`
                         ),
@@ -184,18 +185,18 @@ function updateEmployeeRole() {
                         type: "list",
                         name: "role",
                         message: "Which role do you want to assign the selected employee? (Use arrow keys)",
-                        choices: resRoles.map((role) => role.title),
+                        choices: resRoles.rows.map((role) => role.title),
                     },
                 ])
                 .then((answers) => {
-                    const employee = resEmployees.find(
+                    const employee = resEmployees.rows.find(
                         (employee) =>
                             `${employee.first_name} ${employee.last_name}` === answers.employee
                     );
-                    const role = resRoles.find(
+                    const role = resRoles.rows.find(
                         (role) => role.title === answers.role
                     );
-                    const query = "UPDATE employee SET role_id = ? WHERE id = ?";
+                    const query = "UPDATE employee SET role_id = $1 WHERE id = $2";
                     client.query(query, [role.id, employee.id], (err, res) => {
                         if (err) throw err;
                         console.log("Updated employee's role");
@@ -210,7 +211,7 @@ function viewAllRoles() {
     const query = "SELECT * FROM roles";
     client.query(query, (err, res) => {
         if (err) throw err;
-        console.table(res);
+        console.table(res.rows);
         start();
     });
 }
@@ -269,7 +270,7 @@ function viewAllDepartments() {
     const query = "SELECT * FROM departments";
     client.query(query, (err, res) => {
         if (err) throw err;
-        console.table(res);
+        console.table(res.rows);
         start();
     });
 }
@@ -284,8 +285,8 @@ function addDepartment() {
         })
         .then ((answer) => {
             console.log(answer.name);
-            const query = ` INSERT INTO departments (department_name) VALUES ("${answer.name}")`;
-            client.query(query, (err, res) => {
+            const query = ` INSERT INTO departments (name) VALUES ($1)`;
+            client.query(query, [answer.name], (err, res) => {
                 if (err) throw err;
                 console.log(`Added ${answer.name} department to the database`);
                 start();

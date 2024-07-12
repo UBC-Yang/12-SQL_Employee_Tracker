@@ -1,6 +1,11 @@
+DROP DATABASE IF EXISTS employeetracker_db;
+CREATE DATABASE employeetracker_db;
+
+\c employeetracker_db;
+
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
-    department_name VARCHAR(30) UNIQUE NOT NULL
+    name VARCHAR(30) UNIQUE NOT NULL
 );
 
 CREATE TABLE roles (

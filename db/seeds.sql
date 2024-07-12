@@ -1,5 +1,7 @@
+\c employeetracker_db
+
 -- Insert data into department table
-INSERT INTO departments (department_name)
+INSERT INTO departments (name)
 VALUES
 ('Sales'),
 ('Engineering'),
