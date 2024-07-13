@@ -58,7 +58,7 @@ function start() {
                     addDepartment();
                     break;
                 case "Quit":
-                    connection.end();
+                    client.end();
                     break;
             }
         })
@@ -239,29 +239,23 @@ function addRole() {
                     type: "list",
                     name: "department",
                     message: "Which department does role belong to? (Use arrow keys)",
-                    choices: res.map(
-                        (department) => department. department_name
+                    choices: res.rows.map(
+                        (department) => department.name
                     ),
                 },
             ])
             .then ((answers) => {
-                const department = res.find (
+                const department = res.rows.find (
                     (department) => department.name === answers.department
                 );
-                const query = "INSERT INTO roles SET ?";
-                client.query(
-                    query,
-                    {
-                        title: answers.title,
-                        salary: answers.salary,
-                        department_id: department,
-                    },
-                    (err, res) => {
-                        if (err) throw err;
-                        console.log(`${answers.roleName} added`);
-                        start();
-                    }
-                );
+                const insertQuery = "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)";
+                const values = [answers.title, answers.salary, department.id];
+
+                client.query(insertQuery, values, (err, res) => {
+                    if (err) throw err;
+                    console.log(`${answers.title} added`);
+                    start();
+                })
             });
     });
 }
