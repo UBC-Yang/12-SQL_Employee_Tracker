@@ -7,3 +7,4 @@ Developers frequently have to create interfaces that allow non-developers to eas
 [Walthrough Video](https://drive.google.com/file/d/1kSXqBNJHnEnhWJ6Wn1dTbilEnPg6gvM9/preview)
 
 ## Link
+GitHub: https://github.com/UBC-Yang/Employee_Tracker
